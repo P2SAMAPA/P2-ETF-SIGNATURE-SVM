@@ -17,15 +17,14 @@ UNIVERSES = {
     ]
 }
 
-# Rolling windows for signature computation (days)
-WINDOWS = [63, 126, 252]
+# Single rolling window (days) – fast
+WINDOW = 63
 
-# Signature depth
-SIG_DEPTH = 3
+# Signature depth (2 = 6 features)
+SIG_DEPTH = 2
 
-# SVM hyperparameters
+# SVM hyperparameters – linear kernel for speed
 SVM_C = 1.0
-SVM_KERNEL = "rbf"
-SVM_GAMMA = "scale"
+SVM_KERNEL = "linear"
 
 TOP_N = 3
