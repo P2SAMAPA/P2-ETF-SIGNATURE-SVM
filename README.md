@@ -1,39 +1,17 @@
-# P2-ETF-SIGNATURE-SVM
+# Signature Kernel SVM Engine
 
-Welcome to the P2-ETF-SIGNATURE-SVM repository!
+Classifies next‑day return sign using path signatures and an SVM with RBF kernel. For each ETF, we compute lead‑lag signatures (depth 3) over rolling windows (63, 126, 252 days). An SVM is trained on historical signature‑label pairs (positive/negative). The decision function value is the confidence score. Higher positive = stronger bullish signal.
 
-## Description
+- **Windows evaluated:** 63, 126, 252 days (best per ETF)
+- **Model:** SVM (RBF kernel) on truncated signature features
+- **Output:** top 3 ETFs per universe by decision value, with chosen window
 
-This project contains implementations and research related to ETF signature analysis using Support Vector Machines (SVM).
+Runs daily on GitHub Actions.
 
-## Getting Started
-
-To get started with this project, clone the repository and follow the setup instructions below.
-
-### Prerequisites
-
-- Python 3.x
-- pip or conda for package management
-
-### Installation
+## Local execution
 
 ```bash
-git clone https://github.com/P2SAMAPA/P2-ETF-SIGNATURE-SVM.git
-cd P2-ETF-SIGNATURE-SVM
-```
-
-## Usage
-
-Add usage instructions here.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue to discuss any changes.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-For questions or inquiries, please contact the repository owner.
+pip install -r requirements.txt
+export HF_TOKEN=<your_token>
+python trainer.py
+streamlit run streamlit_app.py
