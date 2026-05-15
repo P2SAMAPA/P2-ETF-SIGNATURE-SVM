@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 import config
 import data_manager
-from signature_features import rolling_signatures
+from signature_features import rolling_signatures, lead_lag_path, signature_depth2
 from signature_svm import train_model, predict_decision
 
 def main():
@@ -29,7 +29,6 @@ def main():
         for etf in tickers:
             if etf not in prices.columns:
                 continue
-            # Get price series
             price_series = prices[etf].dropna()
             if len(price_series) < config.WINDOW + 20:
                 continue
@@ -39,7 +38,7 @@ def main():
             svm, scaler = train_model(signatures, labels)
             if svm is None:
                 continue
-            # Last signature (most recent window)
+            # Last signature
             last_window = price_series.iloc[-config.WINDOW:]
             path = lead_lag_path(last_window)
             if path is None:
