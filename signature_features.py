@@ -1,50 +1,71 @@
 import numpy as np
 import pandas as pd
-import iisignature
 
-def lead_lag_transform(prices, etf_name):
+def lead_lag_path(prices_series):
     """
-    Create lead‑lag path for a single ETF.
-    Returns a 2D array (2, window) where first row is lead, second is lag.
+    Convert a price series to a lead‑lag path:
+    Points: (price_t, price_{t-1}) for t = 1..N-1.
+    Returns numpy array of shape (N-1, 2).
     """
-    # For single asset, lead-lag path is: (t, price_t) and (t, price_{t-1})
-    # Actually standard lead-lag: X = (X_t, X_{t-1}) for each t.
-    # We'll generate a stream of 2D points: (price_t, price_{t-1})
-    price_series = prices[etf_name].dropna().values
-    if len(price_series) < 2:
+    if len(prices_series) < 2:
         return None
-    lead = price_series[1:]
-    lag = price_series[:-1]
-    path = np.column_stack([lead, lag])   # shape (window, 2)
-    return path
+    lead = prices_series[1:].values
+    lag = prices_series[:-1].values
+    return np.column_stack([lead, lag])
 
-def compute_signature(prices_df, etf_name, window, depth=3):
+def compute_signature_manual(path, depth=3):
     """
-    Compute truncated signature for a single ETF over the last `window` days.
-    Returns a flat signature vector (size = sum_{k=1}^{depth} 2^k) for 2D path.
+    Compute truncated signature of a 2D path (list of points) up to depth 3.
+    Uses iterated integrals via simple loop (for small depth).
+    Returns a flat numpy array of length sum_{k=1}^{depth} 2^k.
+    """
+    if path is None or len(path) < 2:
+        return None
+    # Compute increments
+    inc = np.diff(path, axis=0)  # shape (L, 2)
+    L = inc.shape[0]
+    # Precompute all iterated integrals recursively
+    # For depth 1: integrals of dX and dY (just the total increment)
+    sig1 = np.sum(inc, axis=0)  # (2,)
+    # For depth 2: integrals of dX dX, dX dY, dY dX, dY dY
+    # Using double loop
+    sig2 = np.zeros(4)
+    idx = 0
+    for i in range(2):
+        for j in range(2):
+            total = 0.0
+            for s in range(L):
+                # Integral of dX_i from 0..s times dX_j at s
+                prefix = np.sum(inc[:s+1, i]) if s >= 0 else 0.0
+                total += prefix * inc[s, j]
+            sig2[idx] = total
+            idx += 1
+    # For depth 3: triple integrals (2^3 = 8)
+    sig3 = np.zeros(8)
+    idx = 0
+    for i in range(2):
+        for j in range(2):
+            for k in range(2):
+                total = 0.0
+                for s2 in range(L):
+                    # double integral up to s2
+                    double = 0.0
+                    for s1 in range(s2+1):
+                        prefix = np.sum(inc[:s1+1, i]) if s1 >= 0 else 0.0
+                        double += prefix * inc[s1, j]
+                    total += double * inc[s2, k]
+                sig3[idx] = total
+                idx += 1
+    return np.concatenate([sig1, sig2, sig3])
+
+def compute_signature_for_etf(prices_df, etf, window, depth=3):
+    """
+    Compute signature for a single ETF over the last `window` days.
     """
     if len(prices_df) < window:
         return None
-    # Take last window days of prices
-    window_prices = prices_df.iloc[-window:][[etf_name]].copy()
-    # Need at least 2 points for signature
-    if len(window_prices) < 2:
-        return None
-    path = lead_lag_transform(window_prices, etf_name)
+    window_prices = prices_df[etf].iloc[-window:]
+    path = lead_lag_path(window_prices)
     if path is None:
         return None
-    # iisignature expects a list of lists: [[x1,y1], [x2,y2], ...]
-    sig = iisignature.sig(path, depth)
-    return np.array(sig)
-
-def compute_signatures_universe(prices_df, etf_names, window, depth=3):
-    """
-    Compute signatures for all ETFs in the universe for a given window.
-    Returns dict {etf: signature vector}.
-    """
-    result = {}
-    for etf in etf_names:
-        sig = compute_signature(prices_df, etf, window, depth)
-        if sig is not None:
-            result[etf] = sig
-    return result
+    return compute_signature_manual(path, depth)
