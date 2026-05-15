@@ -1,7 +1,6 @@
 numpy
 pandas
 scikit-learn
-iisignature
 huggingface-hub
 streamlit
 plotly
