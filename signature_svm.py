@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+import config
 
 def train_svm_for_etf(signature_series, targets):
     """
@@ -14,7 +15,7 @@ def train_svm_for_etf(signature_series, targets):
     y = np.array(targets)
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-    svm = SVC(kernel=SVM_KERNEL, C=SVM_C, gamma=SVM_GAMMA, probability=False, random_state=42)
+    svm = SVC(kernel=config.SVM_KERNEL, C=config.SVM_C, gamma=config.SVM_GAMMA, probability=False, random_state=42)
     svm.fit(X_scaled, y)
     return svm, scaler
 
