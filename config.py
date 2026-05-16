@@ -18,10 +18,10 @@ UNIVERSES = {
 }
 
 # Rolling windows to evaluate (days)
-WINDOWS = [63, 126, 252]
+WINDOWS = [126, 252]
 
 # Signature depth (3 = 14 features)
-SIG_DEPTH = 3
+SIG_DEPTH = 2
 
 # SVM hyperparameters – RBF kernel for non‑linear decision boundary
 SVM_C = 1.0
