@@ -2,7 +2,7 @@ name: Daily Signature SVM Run
 
 on:
   schedule:
-    - cron: '15 01 * * 1-5'
+    - cron: '15 01 * * 1-6'
   workflow_dispatch:
 
 jobs:
